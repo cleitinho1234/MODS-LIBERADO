@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postar no Blog</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; font-size: 18px; }
+        label { display: block; margin-top: 25px; font-weight: bold; }
+        input, textarea, button { width: 100%; padding: 15px; margin-top: 10px; border-radius: 8px; border: 2px solid #333; }
+        button { background-color: #007bff; color: white; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <main role="main">
+        <h1>Criar Nova Postagem</h1>
+
+        <form action="/postar" method="post" enctype="multipart/form-data">
+            <label for="video">1. Escolher o vídeo do seu dia (Arquivo):</label>
+            <input type="file" id="video" name="video" accept="video/*" required aria-label="Selecione um arquivo de vídeo">
+
+            <label for="descricao">2. Descreva o vídeo para o seu público (Opcional):</label>
+            <textarea id="descricao" name="descricao" rows="4" placeholder="Ex: Hoje eu fui ao parque..."></textarea>
+
+            <button type="submit" aria-label="Clique aqui para publicar agora">PUBLICAR NO BLOG</button>
+        </form>
+    </main>
+</body>
+</html>
