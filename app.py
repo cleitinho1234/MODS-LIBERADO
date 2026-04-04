@@ -3,18 +3,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 app = Flask(__name__)
-app.secret_key = 'chave_super_secreta_do_cleitinho' # Troque isso por qualquer frase
+app.secret_key = 'chave_super_secreta_do_cleitinho'
 
 UPLOAD_FOLDER = 'static/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# E-mails que mandam no site
+# E-mails que podem postar e deletar
 ADMINS = ['robertdcg1999@gmail.com', 'cleitinhodacruzsilva4@gmail.com']
 
-# Bancos de dados temporários (Lembre-se: no Render Free, isso apaga ao reiniciar)
-usuarios = {} # {email: senha_hash}
+# Bancos de dados temporários
+usuarios = {} 
 postagens = []
 
 @app.route('/')
@@ -28,9 +28,11 @@ def cadastro():
     if request.method == 'POST':
         email = request.form.get('email')
         senha = request.form.get('senha')
-        if email not in usuarios:
+        if email and email not in usuarios:
             usuarios[email] = generate_password_hash(senha)
-            return redirect(url_for('login'))
+            # Após cadastrar, já faz o login automático
+            session['user'] = email
+            return redirect(url_for('index'))
     return render_template('cadastro.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -41,6 +43,8 @@ def login():
         if email in usuarios and check_password_hash(usuarios[email], senha):
             session['user'] = email
             return redirect(url_for('index'))
+        else:
+            return "E-mail ou senha incorretos! <a href='/login'>Tentar novamente</a>"
     return render_template('login.html')
 
 @app.route('/logout')
@@ -51,7 +55,7 @@ def logout():
 @app.route('/postar', methods=['GET', 'POST'])
 def postar():
     if session.get('user') not in ADMINS:
-        return "Acesso negado!", 403
+        return "Você não tem permissão para postar!", 403
     
     if request.method == 'POST':
         video = request.files.get('video')
@@ -59,7 +63,7 @@ def postar():
         if video:
             filename = video.filename
             video.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            postagens.insert(0, {'id': filename, 'video': filename, 'desc': desc})
+            postagens.insert(0, {'id': filename, 'video': filename, 'desc': desc, 'data': 'Postado agora'})
             return redirect(url_for('index'))
     return render_template('postar.html')
 
