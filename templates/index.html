@@ -5,48 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diário de Bordo Acessível</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f9f9f9; color: #000; line-height: 1.6; padding: 20px; }
+        body { font-family: Arial, sans-serif; background-color: #f9f9f9; color: #000; padding: 20px; }
         header { border-bottom: 4px solid #24292e; padding-bottom: 10px; margin-bottom: 20px; }
         .btn-postar { 
             display: inline-block; background: #28a745; color: white; padding: 15px 25px; 
             text-decoration: none; font-weight: bold; border-radius: 8px; margin-bottom: 20px;
         }
-        article { background: white; border: 2px solid #ddd; padding: 20px; margin-bottom: 30px; border-radius: 10px; }
+        article { background: white; border: 2px solid #ddd; padding: 20px; margin-bottom: 30px; border-radius: 10px; position: relative; }
         video { width: 100%; max-width: 600px; border: 1px solid #000; margin: 10px 0; }
-        .desc-video { font-style: italic; color: #444; border-left: 4px solid #ccc; padding-left: 10px; }
+        .btn-excluir {
+            background-color: #dc3545; color: white; border: none; padding: 10px 20px;
+            text-decoration: none; font-weight: bold; border-radius: 5px; cursor: pointer; display: inline-block; margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
     <header role="banner">
         <h1>Diário de Bordo - Acessível</h1>
-        <p>Meu dia a dia em vídeos e textos.</p>
-        <a href="/postar" class="btn-postar" aria-label="Clique aqui para criar uma nova postagem">➕ CRIAR NOVA POSTAGEM</a>
+        <a href="/postar" class="btn-postar" aria-label="Criar nova postagem">➕ CRIAR NOVA POSTAGEM</a>
     </header>
 
     <main role="main">
-        {% if not posts %}
-            <p>Nenhuma postagem ainda. Clique no botão acima para começar!</p>
-        {% endif %}
-
         {% for post in posts %}
         <article>
             <p><strong>Data: {{ post.data }}</strong></p>
-            <h3>Vídeo do Dia</h3>
             
-            <video controls aria-label="Vídeo da postagem: {{ post.desc }}">
+            <video controls aria-label="Vídeo: {{ post.desc }}">
                 <source src="{{ url_for('static', filename='uploads/' + post.video) }}" type="video/mp4">
-                Seu navegador não suporta vídeos.
             </video>
 
-            <p class="desc-video"><strong>Descrição:</strong> {{ post.desc }}</p>
+            <p><strong>Descrição:</strong> {{ post.desc }}</p>
+
+            <a href="{{ url_for('deletar', id_video=post.id) }}" 
+               class="btn-excluir" 
+               onclick="return confirm('Tem certeza que quer apagar esse vídeo?')"
+               aria-label="Excluir postagem com a descrição: {{ post.desc }}">
+               🗑️ EXCLUIR VÍDEO
+            </a>
         </article>
         {% endfor %}
     </main>
-
-    <footer>
-        <p>&copy; 2026 - Blog criado para acessibilidade total.</p>
-    </footer>
 
 </body>
 </html>
