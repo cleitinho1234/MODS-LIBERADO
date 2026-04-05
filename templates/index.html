@@ -111,7 +111,7 @@
             .then(r => r.json()).then(data => { if (data.status === "sucesso") { localStorage.setItem('scrollpos', window.scrollY); window.location.reload(true); } else { alert("Erro"); btn.disabled = false; } });
         }
 
-        // Lógica da Assistente de IA Refinada
+        // Lógica da Assistente de IA com pedido de permissão instantâneo
         {% if e_admin %}
         const btnMic = document.getElementById('btn-microfone');
         const statusIa = document.getElementById('status-ia');
@@ -134,34 +134,37 @@
         }
 
         const Reconhecimento = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
         if (Reconhecimento) {
             const recognition = new Reconhecimento();
             recognition.lang = 'pt-BR';
             recognition.interimResults = false;
             recognition.continuous = false;
 
-            btnMic.onclick = () => { 
+            btnMic.onclick = async () => { 
                 try {
+                    // Força o navegador a pedir permissão de microfone se ainda não tiver
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
                     recognition.start(); 
                     statusIa.innerText = "Ouvindo..."; 
                     btnMic.style.background = "#ff4757"; 
-                } catch(e) { console.log("Aguardando fim do processo anterior..."); }
+                } catch(err) { 
+                    console.error(err);
+                    statusIa.innerText = "Permissão negada ou erro no mic.";
+                    btnMic.style.background = "#007bff";
+                }
             };
 
             recognition.onresult = (e) => { 
                 const fala = e.results[0][0].transcript; 
                 respostaIa.innerText = "Você disse: " + fala;
                 falarComIA(fala); 
-                btnMic.style.background = "#007bff"; 
             };
 
             recognition.onerror = (event) => { 
                 btnMic.style.background = "#007bff";
-                if(event.error === 'not-allowed') {
-                    statusIa.innerText = "Permita o microfone no cadeado do navegador!";
-                } else {
-                    statusIa.innerText = "Erro: " + event.error; 
-                }
+                statusIa.innerText = "Erro: " + event.error; 
             };
             
             recognition.onend = () => { btnMic.style.background = "#007bff"; };
