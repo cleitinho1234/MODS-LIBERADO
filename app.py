@@ -10,6 +10,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Administradores com permissão total
 ADMINS = ['robertdcg1999@gmail.com', 'cleitinhodacruzsilva4@gmail.com']
 usuarios = {} 
 postagens = [] 
@@ -56,11 +57,12 @@ def postar():
         if video:
             filename = video.filename
             video.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # O campo 'likes' agora é uma lista vazia []
             postagens.insert(0, {
                 'id': filename, 
                 'video': filename, 
                 'desc': desc, 
-                'likes': [], # AGORA É UMA LISTA DE QUEM CURTIU
+                'likes': [], 
                 'comentarios': []
             })
             return redirect(url_for('index'))
@@ -74,11 +76,11 @@ def curtir(id_video):
     
     for p in postagens:
         if p['id'] == id_video:
-            # SÓ ADICIONA SE O USUÁRIO NÃO ESTIVER NA LISTA
+            # Se o usuário não curtiu ainda, adiciona o e-mail dele na lista
             if user not in p['likes']:
                 p['likes'].append(user)
             else:
-                # SE CLICAR DE NOVO, ELE RETIRA O LIKE (OPCIONAL)
+                # Se clicar de novo, remove (descurtir)
                 p['likes'].remove(user)
     return redirect(url_for('index'))
 
