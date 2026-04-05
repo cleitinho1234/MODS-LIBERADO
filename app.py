@@ -7,21 +7,15 @@ import uuid
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_do_cleitinho'
 
-# --- FUNÇÃO PARA VÍDEOS GRANDES ---
-# Define o limite máximo de upload para 100 Megabytes
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 
 
-# Configuração de Uploads
 UPLOAD_FOLDER = 'static/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Lista de Administradores
 ADMINS = ['robertdcg1999@gmail.com', 'cleitinhodacruzsilva4@gmail.com']
-
-# Bancos de dados temporários
-usuarios = {} # Estrutura: {email: {'senha': hash, 'nome': nome}}
+usuarios = {} 
 postagens = [] 
 
 @app.route('/')
@@ -57,94 +51,69 @@ def login():
 def salvar_nome():
     user_email = session.get('user')
     novo_nome = request.form.get('novo_nome', '').strip()
-    
-    if not user_email or not novo_nome: 
-        return redirect(url_for('index'))
-    
+    if not user_email or not novo_nome: return redirect(url_for('index'))
     for email, info in usuarios.items():
         if info.get('nome') == novo_nome and email != user_email:
-            return "Este nome já está em uso por outro usuário! <a href='/'>Voltar</a>"
-    
+            return "Este nome já está em uso! <a href='/'>Voltar</a>"
     usuarios[user_email]['nome'] = novo_nome
     return redirect(url_for('index'))
 
 @app.route('/postar', methods=['GET', 'POST'])
 def postar():
-    if session.get('user') not in ADMINS: 
-        return "Acesso negado", 403
-        
+    if session.get('user') not in ADMINS: return "Acesso negado", 403
     if request.method == 'POST':
         arquivo = request.files.get('arquivo')
         desc = request.form.get('descricao')
         filename = secure_filename(arquivo.filename) if arquivo and arquivo.filename != '' else None
-        
         tipo = 'texto'
         if filename:
             arquivo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             ext = os.path.splitext(filename)[1].lower()
             tipo = 'video' if ext in ['.mp4', '.webm', '.mov', '.avi'] else 'foto'
-
-        postagens.insert(0, {
-            'id': str(uuid.uuid4()), 
-            'arquivo': filename, 
-            'desc': desc, 
-            'tipo': tipo,
-            'likes': [], 
-            'comentarios': []
-        })
+        postagens.insert(0, {'id': str(uuid.uuid4()), 'arquivo': filename, 'desc': desc, 'tipo': tipo, 'likes': [], 'comentarios': []})
         return redirect(url_for('index'))
     return render_template('postar.html')
 
 @app.route('/curtir/<id_post>')
 def curtir(id_post):
     user = session.get('user')
-    if not user: 
-        return jsonify({"erro": "login_obrigatorio"}), 401
-        
+    if not user: return jsonify({"erro": "login_obrigatorio"}), 401
     for p in postagens:
         if p['id'] == id_post:
-            if user not in p['likes']:
-                p['likes'].append(user)
-            else:
-                p['likes'].remove(user)
+            if user not in p['likes']: p['likes'].append(user)
+            else: p['likes'].remove(user)
             return jsonify({"novo_total": len(p['likes'])})
-            
-    return jsonify({"erro": "postagem_nao_encontrada"}), 404
+    return jsonify({"erro": "404"}), 404
 
+# NOVA ROTA DE COMENTÁRIO (SEM REFRESH)
 @app.route('/comentar/<id_post>', methods=['POST'])
 def comentar(id_post):
     user_email = session.get('user')
-    if not user_email: 
-        return redirect(url_for('login'))
+    if not user_email: return jsonify({"erro": "login"}), 401
     
-    texto = request.form.get('conteudo')
-    parent_id = request.form.get('parent_id')
+    dados = request.get_json()
+    texto = dados.get('conteudo')
+    parent_id = dados.get('parent_id')
     nome_usuario = usuarios[user_email]['nome']
     
-    novo_coment = {
-        'id': str(uuid.uuid4()), 
-        'autor': nome_usuario, 
-        'texto': texto, 
-        'respostas': []
-    }
+    novo_coment = {'id': str(uuid.uuid4()), 'autor': nome_usuario, 'texto': texto, 'respostas': []}
 
     for p in postagens:
         if p['id'] == id_post:
             if not parent_id:
                 p['comentarios'].append(novo_coment)
+                return jsonify({"status": "sucesso"})
             else:
                 for c in p['comentarios']:
                     if c['id'] == parent_id:
                         novo_coment['texto'] = f"@{c['autor']} {texto}"
                         c['respostas'].append(novo_coment)
-                        break
-    return redirect(url_for('index'))
+                        return jsonify({"status": "sucesso"})
+    return jsonify({"erro": "404"}), 404
 
 @app.route('/deletar/<id_post>')
 def deletar(id_post):
-    if session.get('user') not in ADMINS: 
-        return "Negado", 403
-        
+    if session.get('user') not in ADMINS: return "Negado", 403
     global postagens
     postagens = [p for p in postagens if p['id'] != id_post]
     return redirect(url_for('index'))
