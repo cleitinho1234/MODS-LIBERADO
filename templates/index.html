@@ -15,6 +15,13 @@
         .btn-adm { display: block; background: #28a745; color: white; padding: 15px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
         .btn-sair { color: #d9534f; font-size: 1em; display: block; margin-top: 15px; font-weight: bold; text-decoration: none; border: 1px solid #d9534f; padding: 8px; border-radius: 8px; }
         .input-nome { padding: 12px; border-radius: 8px; border: 2px solid #ccc; width: 100%; max-width: 200px; margin-right: 5px; }
+        
+        /* Estilos de Interação */
+        .interacao { border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px; display: flex; gap: 15px; }
+        .btn-interagir { background: none; border: none; color: #65676b; font-weight: bold; cursor: pointer; padding: 5px; }
+        .btn-interagir.curtido { color: #007bff; }
+        .comentarios-section { margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 0.9em; }
+        .input-comentario { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #ddd; margin-top: 5px; outline: none; }
     </style>
 </head>
 <body>
@@ -43,14 +50,73 @@
         {% endif %}
 
         {% for post in posts %}
-        <div class="card">
+        <div class="card" id="post-{{ post.id }}">
             <p><strong>{{ post.desc }}</strong></p>
             {% if post.arquivo %}
                 {% if post.tipo == 'video' %}<video controls playsinline style="width:100%; border-radius:8px;" src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
                 {% else %}<img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}" style="width:100%; border-radius:8px;">{% endif %}
             {% endif %}
+
+            <div class="interacao">
+                <button class="btn-interagir {% if user in post.likes %}curtido{% endif %}" onclick="curtirPost('{{ post.id }}')">
+                    👍 <span id="total-likes-{{ post.id }}">{{ post.likes|length }}</span> Curtidas
+                </button>
+                <button class="btn-interagir" onclick="focarComentario('{{ post.id }}')">💬 Comentar</button>
+                {% if e_admin %}
+                    <a href="/deletar/{{ post.id }}" style="color: red; text-decoration: none; font-size: 0.8em; margin-left: auto;">Excluir</a>
+                {% endif %}
+            </div>
+
+            <div class="comentarios-section">
+                <div id="lista-comentarios-{{ post.id }}">
+                    {% for coment in post.comentarios %}
+                        <p><strong>{{ get_nome_atual(coment.autor_email) }}:</strong> {{ coment.texto }}</p>
+                    {% endfor %}
+                </div>
+                {% if user %}
+                    <input type="text" class="input-comentario" id="input-{{ post.id }}" placeholder="Escreva um comentário..." onkeypress="enviarComentario(event, '{{ post.id }}')">
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
     </div>
+
+    <script>
+        // Função para Curtir sem recarregar a página
+        async function curtirPost(postId) {
+            const res = await fetch(`/curtir/${postId}`);
+            const data = await res.json();
+            if (data.novo_total !== undefined) {
+                document.getElementById(`total-likes-${postId}`).innerText = data.novo_total;
+                event.target.classList.toggle('curtido');
+            }
+        }
+
+        function focarComentario(postId) {
+            const input = document.getElementById(`input-${postId}`);
+            if (input) input.focus();
+        }
+
+        // Função para Comentar sem recarregar a página
+        async function enviarComentario(event, postId) {
+            if (event.key === 'Enter') {
+                const texto = event.target.value;
+                if (!texto.strip) {
+                    const res = await fetch(`/comentar/${postId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ conteudo: texto })
+                    });
+
+                    if (res.ok) {
+                        // Adiciona o comentário na tela na hora
+                        const lista = document.getElementById(`lista-comentarios-${postId}`);
+                        lista.innerHTML += `<p><strong>Você:</strong> ${texto}</p>`;
+                        event.target.value = '';
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>
