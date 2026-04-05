@@ -3,26 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Postar - RB BLOGS</title>
+    <title>Nova Postagem - RB BLOGS</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #24292e; }
-        input, textarea { width: 100%; margin: 10px 0; padding: 12px; border-radius: 8px; border: 1px solid #ddd; }
-        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .voltar { display: block; text-align: center; margin-top: 15px; color: #65676b; text-decoration: none; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .post-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            width: 100%; 
+            max-width: 450px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            border: 1px solid #ddd;
+        }
+        h2 { 
+            text-align: center; 
+            color: #24292e; 
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #4b4f56;
+            font-size: 0.9em;
+        }
+        textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #ddd; 
+            resize: none; 
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+        input[type="file"] { 
+            width: 100%; 
+            margin-bottom: 25px; 
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #adb5bd;
+            cursor: pointer;
+        }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 1em;
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #218838; }
+        .cancelar { 
+            display: block; 
+            text-align: center; 
+            margin-top: 15px; 
+            color: #65676b; 
+            text-decoration: none; 
+            font-size: 0.9em;
+        }
+        .cancelar:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Nova Postagem</h2>
+
+    <div class="post-card">
+        <h2>RB BLOGS</h2>
+        <p style="text-align: center; color: #65676b; margin-bottom: 25px;">Crie uma nova publicação</p>
+        
         <form action="/postar" method="post" enctype="multipart/form-data">
-            <textarea name="descricao" placeholder="O que você está pensando? (Opcional)" rows="4"></textarea>
-            <p style="font-size: 0.8em; color: #666;">Selecione uma Foto ou Vídeo (opcional):</p>
-            <input type="file" name="arquivo" accept="image/*,video/*">
-            <button type="submit">PUBLICAR NO RB BLOGS</button>
+            
+            <label for="descricao">Legenda ou Texto:</label>
+            <textarea id="descricao" name="descricao" rows="5" placeholder="No que você está pensando?"></textarea>
+            
+            <label for="arquivo">Adicionar Foto ou Vídeo:</label>
+            <input type="file" id="arquivo" name="arquivo" accept="image/*,video/*">
+            
+            <button type="submit">PUBLICAR AGORA</button>
         </form>
-        <a href="/" class="voltar">Cancelar e Voltar</a>
+        
+        <a href="/" class="cancelar">Voltar para o Início</a>
     </div>
+
 </body>
 </html>
