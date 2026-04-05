@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
@@ -9,6 +10,10 @@ UPLOAD_FOLDER = 'static/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Extensões permitidas
+IMAGE_EXT = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+VIDEO_EXT = {'.mp4', '.mov', '.avi', '.webm'}
 
 ADMINS = ['robertdcg1999@gmail.com', 'cleitinhodacruzsilva4@gmail.com']
 usuarios = {} 
@@ -51,55 +56,60 @@ def logout():
 def postar():
     if session.get('user') not in ADMINS:
         return "Acesso negado!", 403
+    
     if request.method == 'POST':
-        video = request.files.get('video')
+        arquivo = request.files.get('arquivo')
         desc = request.form.get('descricao')
-        if video:
-            filename = video.filename
-            video.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            postagens.insert(0, {
-                'id': filename, 
-                'video': filename, 
-                'desc': desc, 
-                'likes': [], 
-                'comentarios': []
-            })
-            return redirect(url_for('index'))
+        tipo = 'texto'
+        filename = None
+
+        if arquivo and arquivo.filename != '':
+            filename = secure_filename(arquivo.filename)
+            arquivo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in IMAGE_EXT:
+                tipo = 'foto'
+            elif ext in VIDEO_EXT:
+                tipo = 'video'
+
+        postagens.insert(0, {
+            'id': filename if filename else str(len(postagens)), 
+            'arquivo': filename, 
+            'desc': desc, 
+            'tipo': tipo,
+            'likes': [], 
+            'comentarios': []
+        })
+        return redirect(url_for('index'))
     return render_template('postar.html')
 
-@app.route('/curtir/<id_video>')
-def curtir(id_video):
+@app.route('/curtir/<id_post>')
+def curtir(id_post):
     user = session.get('user')
-    if not user:
-        return jsonify({"erro": "login_necessario"}), 401
-    
+    if not user: return jsonify({"erro": "login"}), 401
     for p in postagens:
-        if p['id'] == id_video:
-            if user not in p['likes']:
-                p['likes'].append(user)
-            else:
-                p['likes'].remove(user)
+        if p['id'] == id_post:
+            if user not in p['likes']: p['likes'].append(user)
+            else: p['likes'].remove(user)
             return jsonify({"novo_total": len(p['likes'])})
-    return jsonify({"erro": "nao_encontrado"}), 404
+    return jsonify({"erro": "404"}), 404
 
-@app.route('/comentar/<id_video>', methods=['POST'])
-def comentar(id_video):
+@app.route('/comentar/<id_post>', methods=['POST'])
+def comentar(id_post):
     user = session.get('user')
-    if not user:
-        return redirect(url_for('login'))
+    if not user: return redirect(url_for('login'))
     texto = request.form.get('conteudo')
     if texto:
         for p in postagens:
-            if p['id'] == id_video:
+            if p['id'] == id_post:
                 p['comentarios'].append({'autor': user, 'texto': texto})
     return redirect(url_for('index'))
 
-@app.route('/deletar/<id_video>')
-def deletar(id_video):
-    if session.get('user') not in ADMINS:
-        return "Acesso negado!", 403
+@app.route('/deletar/<id_post>')
+def deletar(id_post):
+    if session.get('user') not in ADMINS: return "Negado", 403
     global postagens
-    postagens = [p for p in postagens if p['id'] != id_video]
+    postagens = [p for p in postagens if p['id'] != id_post]
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
