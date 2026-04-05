@@ -7,7 +7,7 @@ import uuid
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_do_cleitinho'
 
-# Permite vídeos de até 100MB
+# Configuração para aceitar vídeos grandes (100MB)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -90,9 +90,12 @@ def comentar(id_post):
     user_email = session.get('user')
     if not user_email: return jsonify({"erro": "login"}), 401
     dados = request.get_json()
-    texto = dados.get('conteudo')
+    texto = dados.get('conteudo', '').strip()
     parent_id = dados.get('parent_id')
     nome_usuario = usuarios[user_email]['nome']
+    
+    if not texto: return jsonify({"erro": "vazio"}), 400
+
     novo_coment = {'id': str(uuid.uuid4()), 'autor': nome_usuario, 'texto': texto, 'respostas': []}
     for p in postagens:
         if p['id'] == id_post:
