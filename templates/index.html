@@ -25,12 +25,12 @@
     <div class="main-container">
         {% if user %}
             <div class="profile-card">
-                <span>Seu nome no blog: <strong>{{ user_info.nome }}</strong></span>
+                <span>Seu nome: <strong>{{ user_info.nome }}</strong></span>
                 <form action="/salvar_nome" method="post" style="margin-top: 10px;">
-                    <input type="text" name="novo_nome" placeholder="Trocar meu nome..." required style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
-                    <button type="submit" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Salvar</button>
+                    <input type="text" name="novo_nome" placeholder="Trocar nome..." required style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
+                    <button type="submit" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px;">Salvar</button>
                 </form>
-                <a href="/logout" style="color:red; font-size: 0.8em; text-decoration:none; display:block; margin-top:10px;">Sair da conta</a>
+                <a href="/logout" style="color:red; font-size: 0.8em; display:block; margin-top:10px;">Sair</a>
             </div>
             {% if e_admin %}<a href="/postar" class="btn-adm">+ NOVA POSTAGEM</a>{% endif %}
         {% else %}
@@ -42,7 +42,7 @@
             <p><strong>{{ post.desc }}</strong></p>
             {% if post.arquivo %}
                 <div class="media">
-                    {% if post.tipo == 'video' %}<video controls src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
+                    {% if post.tipo == 'video' %}<video controls playsinline src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
                     {% else %}<img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}">{% endif %}
                 </div>
             {% endif %}
@@ -52,7 +52,7 @@
                 <div>💬 {{ post.comentarios|length }} Comentários</div>
             </div>
 
-            <button onclick="curtir('{{ post.id }}', this)" style="border:none; background:#eee; border-radius:15px; padding:5px 12px; cursor:pointer;">Curtir</button>
+            <button onclick="curtir('{{ post.id }}', this)" style="border:none; background:#eee; border-radius:15px; padding:8px 15px; cursor:pointer;">Curtir</button>
 
             <div style="margin-top:15px;">
                 {% for c in post.comentarios %}
@@ -79,7 +79,7 @@
             </form>
             {% endif %}
 
-            {% if e_admin %}<a href="{{ url_for('deletar', id_post=post.id) }}" class="btn-del" onclick="return confirm('Apagar?')">🗑️ EXCLUIR POSTAGEM</a>{% endif %}
+            {% if e_admin %}<a href="{{ url_for('deletar', id_post=post.id) }}" class="btn-del" onclick="return confirm('Apagar?')">🗑️ EXCLUIR</a>{% endif %}
         </div>
         {% endfor %}
     </div>
@@ -102,7 +102,14 @@
             event.preventDefault();
             const form = event.target;
             const input = form.querySelector('input[name="conteudo"]');
-            const conteudo = input.value;
+            const btn = form.querySelector('button');
+            const conteudo = input.value.trim();
+
+            if (!conteudo) return;
+
+            // Desativa botão para o celular não bugar
+            btn.disabled = true;
+            btn.innerText = "...";
 
             fetch('/comentar/' + idPost, {
                 method: 'POST',
@@ -113,10 +120,15 @@
             .then(data => {
                 if (data.status === "sucesso") {
                     localStorage.setItem('scrollpos', window.scrollY);
-                    location.reload();
+                    window.location.reload(true); // Força recarregar
                 } else {
-                    alert("Erro ao comentar. Verifique o login.");
+                    alert("Erro ao comentar.");
+                    btn.disabled = false;
+                    btn.innerText = "Enviar";
                 }
+            }).catch(err => {
+                btn.disabled = false;
+                btn.innerText = "Enviar";
             });
         }
 
