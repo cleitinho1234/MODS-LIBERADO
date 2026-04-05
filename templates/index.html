@@ -14,36 +14,60 @@
         .media img, .media video { width: 100%; border-radius: 8px; margin: 10px 0; }
         .status-bar { display: flex; gap: 20px; padding: 10px 0; border-bottom: 1px solid #eee; margin-bottom: 15px; color: #65676b; font-size: 0.9em; font-weight: bold; }
         .btn-enviar { background: #007bff; color: white; border: none; border-radius: 20px; padding: 8px 15px; cursor: pointer; }
-        .btn-adm { display: block; background: #28a745; color: white; padding: 12px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+        .btn-adm { display: block; background: #28a745; color: white; padding: 12px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 20px; min-height: 50px; line-height: 25px; }
         .btn-del { color: red; text-decoration: none; font-size: 0.8em; display: block; text-align: center; margin-top: 10px; }
         .form-resp { display: none; margin-top: 5px; }
         .resp-bloco { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; display: none; margin-top: 5px; }
+
+        /* NOVOS ESTILOS DE ACESSIBILIDADE */
+        .btn-acessivel {
+            display: inline-block;
+            min-width: 160px;
+            min-height: 55px; /* Tamanho grande para facilitar o toque */
+            line-height: 55px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin: 10px;
+            border: 2px solid #0056b3;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-acessivel:focus {
+            outline: 5px solid #ffc107; /* Borda amarela forte para o TalkBack */
+        }
     </style>
 </head>
 <body>
     <header><h1>RB BLOGS</h1></header>
     <div class="main-container">
         {% if user %}
-            <div class="profile-card">
+            <div class="profile-card" role="region" aria-label="Perfil do usuário">
                 <span>Seu nome: <strong>{{ user_info.nome }}</strong></span>
                 <form action="/salvar_nome" method="post" style="margin-top: 10px;">
-                    <input type="text" name="novo_nome" placeholder="Trocar nome..." required style="padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
-                    <button type="submit" style="background:#007bff; color:white; border:none; padding:5px 10px; border-radius:5px;">Salvar</button>
+                    <input type="text" name="novo_nome" aria-label="Digite o novo nome para trocar" placeholder="Trocar nome..." required style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; min-height: 44px;">
+                    <button type="submit" aria-label="Confirmar alteração de nome" style="background:#007bff; color:white; border:none; padding:10px 20px; border-radius:5px; min-height: 48px;">Salvar</button>
                 </form>
-                <a href="/logout" style="color:red; font-size: 0.8em; display:block; margin-top:10px;">Sair</a>
+                <a href="/logout" aria-label="Sair da conta" style="color:red; font-size: 1.1em; display:block; margin-top:15px; font-weight: bold; padding: 10px;">SAIR DA CONTA</a>
             </div>
-            {% if e_admin %}<a href="/postar" class="btn-adm">+ NOVA POSTAGEM</a>{% endif %}
+            {% if e_admin %}<a href="/postar" class="btn-adm" aria-label="Criar nova postagem">+ NOVA POSTAGEM</a>{% endif %}
         {% else %}
-            <div class="profile-card"><a href="/login">Entrar</a> / <a href="/cadastro">Cadastrar</a></div>
+            <div class="profile-card" role="navigation" aria-label="Menu de entrada">
+                <p style="font-size: 1.2em; margin-bottom: 15px; font-weight: bold;">Bem-vindo! Escolha uma opção:</p>
+                <a href="/login" class="btn-acessivel" aria-label="Botão para Entrar na sua conta">ENTRAR</a>
+                <a href="/cadastro" class="btn-acessivel" style="background: #6c757d; border-color: #545b62;" aria-label="Botão para Criar uma conta nova">CADASTRAR</a>
+            </div>
         {% endif %}
 
         {% for post in posts %}
-        <div class="card">
+        <div class="card" role="article">
             <p><strong>{{ post.desc }}</strong></p>
             {% if post.arquivo %}
                 <div class="media">
                     {% if post.tipo == 'video' %}<video controls playsinline src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
-                    {% else %}<img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}">{% endif %}
+                    {% else %}<img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}" alt="Imagem da postagem">{% endif %}
                 </div>
             {% endif %}
 
@@ -52,18 +76,18 @@
                 <div>💬 {{ post.comentarios|length }} Comentários</div>
             </div>
 
-            <button onclick="curtir('{{ post.id }}', this)" style="border:none; background:#eee; border-radius:15px; padding:8px 15px; cursor:pointer;">Curtir</button>
+            <button onclick="curtir('{{ post.id }}', this)" aria-label="Curtir esta postagem" style="border:none; background:#eee; border-radius:15px; padding:10px 20px; cursor:pointer; min-height: 48px;">Curtir</button>
 
             <div style="margin-top:15px;">
                 {% for c in post.comentarios %}
                 <div style="margin-bottom:10px; border-bottom: 1px solid #f9f9f9;">
                     <strong>{{ get_nome_atual(c.autor_email) }}</strong>: {{ c.texto }}<br>
                     
-                    <button onclick="toggle('f-{{ c.id }}')" style="color:blue; background:none; border:none; font-size:0.8em; cursor:pointer;">Responder</button>
+                    <button onclick="toggle('f-{{ c.id }}')" aria-label="Responder comentário de {{ get_nome_atual(c.autor_email) }}" style="color:blue; background:none; border:none; font-size:0.9em; cursor:pointer; padding: 10px 0;">Responder</button>
                     
                     <form id="f-{{ c.id }}" onsubmit="enviarComentario(event, '{{ post.id }}', '{{ c.id }}')" class="form-resp">
-                        <input type="text" name="conteudo" placeholder="Responder..." required style="border-radius:15px; border:1px solid #ddd; padding:5px;">
-                        <button type="submit" class="btn-enviar">➤</button>
+                        <input type="text" name="conteudo" aria-label="Escreva sua resposta" placeholder="Responder..." required style="border-radius:15px; border:1px solid #ddd; padding:8px; min-height: 44px;">
+                        <button type="submit" class="btn-enviar" aria-label="Enviar resposta">➤</button>
                     </form>
 
                     <div id="r-{{ c.id }}" class="resp-bloco">
@@ -77,12 +101,12 @@
 
             {% if user %}
             <form onsubmit="enviarComentario(event, '{{ post.id }}')" style="display:flex; gap:5px; margin-top:15px;">
-                <input type="text" name="conteudo" placeholder="Comentar..." required style="flex:1; border-radius:20px; border:1px solid #ddd; padding:10px;">
-                <button type="submit" class="btn-enviar">Enviar</button>
+                <input type="text" name="conteudo" aria-label="Escreva um comentário" placeholder="Comentar..." required style="flex:1; border-radius:20px; border:1px solid #ddd; padding:12px; min-height: 48px;">
+                <button type="submit" class="btn-enviar" style="min-width: 80px;">Enviar</button>
             </form>
             {% endif %}
 
-            {% if e_admin %}<a href="{{ url_for('deletar', id_post=post.id) }}" class="btn-del" onclick="return confirm('Apagar?')">🗑️ EXCLUIR</a>{% endif %}
+            {% if e_admin %}<a href="{{ url_for('deletar', id_post=post.id) }}" class="btn-del" onclick="return confirm('Apagar?')">🗑️ EXCLUIR POSTAGEM</a>{% endif %}
         </div>
         {% endfor %}
     </div>
