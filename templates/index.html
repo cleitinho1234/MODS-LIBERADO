@@ -3,46 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diário de Bordo Acessível</title>
+    <title>Diário de Bordo</title>
     <style>
         * { box-sizing: border-box; }
-        body { 
-            font-family: sans-serif; 
-            background-color: #f0f2f5; 
-            margin: 0; padding: 0; 
-            display: flex; flex-direction: column; align-items: center;
-        }
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
         .main-container { width: 100%; max-width: 700px; padding: 15px; }
         header { background: #24292e; color: white; padding: 20px; text-align: center; width: 100%; border-radius: 0 0 15px 15px; }
-        
         .user-bar { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; justify-content: space-between; }
         .btn-postar { display: block; background: #28a745; color: white; padding: 15px; text-align: center; text-decoration: none; font-weight: bold; border-radius: 10px; margin-bottom: 20px; }
-        
         article { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 12px; }
-        
         .video-container { width: 100%; background: #000; border-radius: 8px; overflow: hidden; margin: 10px 0; }
         video { width: 100%; height: auto; display: block; }
-        
-        .btn-like { 
-            text-decoration: none; font-size: 18px; padding: 8px 15px; 
-            background: #f0f2f5; border-radius: 20px; color: #4b4f56; font-weight: bold; display: inline-block;
-        }
-        
+        .btn-like { cursor: pointer; border: none; font-size: 18px; padding: 8px 15px; background: #f0f2f5; border-radius: 20px; color: #4b4f56; font-weight: bold; }
         .comentarios-lista { margin-top: 15px; padding: 0; list-style: none; }
         .comentario-item { background: #f0f2f5; padding: 10px; border-radius: 10px; margin-bottom: 5px; }
-        
         .form-comentario { display: flex; gap: 5px; margin-top: 10px; }
         .form-comentario input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; }
         .form-comentario button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 20px; }
-
-        .btn-excluir { background: #fff1f1; color: #dc3545; padding: 10px; text-decoration: none; display: block; text-align: center; margin-top: 15px; border-radius: 8px; font-weight: bold; }
+        .btn-excluir { color: #dc3545; text-decoration: none; display: block; text-align: center; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Diário de Bordo</h1>
-    </header>
+    <header><h1>Diário de Bordo</h1></header>
 
     <div class="main-container">
         <div class="user-bar">
@@ -50,8 +33,7 @@
                 <span>Olá, <strong>{{ user.split('@')[0] }}</strong></span>
                 <a href="/logout">Sair</a>
             {% else %}
-                <a href="/login">Entrar</a>
-                <a href="/cadastro">Criar Conta</a>
+                <a href="/login">Entrar</a> / <a href="/cadastro">Criar Conta</a>
             {% endif %}
         </div>
 
@@ -63,24 +45,18 @@
             {% for post in posts %}
             <article>
                 <p><strong>{{ post.desc }}</strong></p>
-                
                 <div class="video-container">
-                    <video controls>
-                        <source src="{{ url_for('static', filename='uploads/' + post.video) }}" type="video/mp4">
-                    </video>
+                    <video controls><source src="{{ url_for('static', filename='uploads/' + post.video) }}" type="video/mp4"></video>
                 </div>
 
                 <div class="interacao">
-                    <a href="{{ url_for('curtir', id_video=post.id) }}" class="btn-like" 
-                       aria-label="Curtir. Total de curtidas: {{ post.likes|length }}">
-                       👍 {{ post.likes|length }}
-                    </a>
+                    <button class="btn-like" onclick="curtirVideo('{{ post.id }}', this)" aria-label="Curtir. Total: {{ post.likes|length }}">
+                        👍 <span class="contagem">{{ post.likes|length }}</span>
+                    </button>
 
                     <ul class="comentarios-lista">
                         {% for c in post.comentarios %}
-                            <li class="comentario-item">
-                                <strong>{{ c.autor.split('@')[0] }}:</strong> {{ c.texto }}
-                            </li>
+                            <li class="comentario-item"><strong>{{ c.autor.split('@')[0] }}:</strong> {{ c.texto }}</li>
                         {% endfor %}
                     </ul>
 
@@ -93,12 +69,29 @@
                 </div>
 
                 {% if e_admin %}
-                    <a href="{{ url_for('deletar', id_video=post.id) }}" class="btn-excluir" onclick="return confirm('Apagar vídeo?')">🗑️ EXCLUIR</a>
+                    <a href="{{ url_for('deletar', id_video=post.id) }}" class="btn-excluir" onclick="return confirm('Apagar?')">🗑️ EXCLUIR</a>
                 {% endif %}
             </article>
             {% endfor %}
         </main>
     </div>
 
+    <script>
+    function curtirVideo(idVideo, elemento) {
+        fetch('/curtir/' + idVideo)
+        .then(response => {
+            if (response.status === 401) { window.location.href = '/login'; return; }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.novo_total !== undefined) {
+                const span = elemento.querySelector('.contagem');
+                span.innerText = data.novo_total;
+                elemento.setAttribute('aria-label', 'Curtir. Total: ' + data.novo_total);
+            }
+        })
+        .catch(err => console.error(err));
+    }
+    </script>
 </body>
 </html>
