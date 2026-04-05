@@ -6,113 +6,86 @@
     <title>RB BLOGS</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .main-container { width: 100%; max-width: 600px; padding: 10px; }
-        header { background: #24292e; color: white; padding: 15px; text-align: center; width: 100%; }
-        
-        /* Barra de Perfil */
-        .profile-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; }
-        .profile-bar form { display: flex; gap: 5px; margin-top: 10px; }
-        
-        article { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 12px; }
-        .media-container img, .media-container video { width: 100%; border-radius: 8px; }
-        
-        /* Comentários e Respostas */
-        .comentario-bloco { margin-top: 15px; border-left: 3px solid #eee; padding-left: 10px; }
-        .resposta-bloco { margin-left: 30px; margin-top: 10px; font-size: 0.9em; border-left: 2px solid #007bff; padding-left: 10px; display: none; }
-        
-        .btn-responder { background: none; border: none; color: #007bff; font-size: 0.8em; cursor: pointer; padding: 0; font-weight: bold; }
-        .ver-respostas { background: none; border: none; color: #65676b; font-size: 0.8em; cursor: pointer; display: block; margin-top: 5px; }
-        
-        .form-resposta { display: none; margin-top: 5px; }
-        input[type="text"] { padding: 8px; border-radius: 15px; border: 1px solid #ddd; width: 80%; }
-        button.envio { border-radius: 15px; border: none; background: #007bff; color: white; padding: 5px 12px; cursor: pointer; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .main-container { width: 100%; max-width: 650px; padding: 15px; }
+        header { background: #24292e; color: white; padding: 20px; text-align: center; width: 100%; margin-bottom: 20px; }
+        .card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .profile-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; text-align: center; }
+        .media img, .media video { width: 100%; border-radius: 8px; margin: 10px 0; }
+        .btn-responder { color: #007bff; border: none; background: none; font-size: 0.8em; cursor: pointer; font-weight: bold; }
+        .resp-bloco { margin-left: 20px; border-left: 2px solid #ddd; padding-left: 10px; display: none; margin-top: 5px; }
+        .form-resp { display: none; margin-top: 5px; }
+        .btn-adm { display: block; background: #28a745; color: white; padding: 12px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+        .btn-del { color: red; text-decoration: none; font-size: 0.8em; display: block; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
     <header><h1>RB BLOGS</h1></header>
-
     <div class="main-container">
         {% if user %}
-        <div class="profile-bar">
-            <span>Seu nome no blog: <strong>{{ user_info.nome }}</strong></span>
-            <form action="/salvar_nome" method="post">
-                <input type="text" name="novo_nome" placeholder="Trocar meu nome..." required maxlength="20">
-                <button type="submit" class="envio">Salvar</button>
-            </form>
-            <a href="/logout" style="font-size: 0.8em; color: red;">Sair da conta</a>
-        </div>
-        {% else %}
-            <div class="profile-bar" style="text-align: center;">
-                <a href="/login">Entrar</a> ou <a href="/cadastro">Criar Conta</a>
+            <div class="profile-card">
+                <span>Nome: <strong>{{ user_info.nome }}</strong></span>
+                <form action="/salvar_nome" method="post" style="margin-top: 10px;">
+                    <input type="text" name="novo_nome" placeholder="Trocar nome..." required>
+                    <button type="submit">Salvar</button>
+                </form>
+                <a href="/logout" style="color:red; font-size: 0.8em;">Sair da conta</a>
             </div>
+            {% if e_admin %}<a href="/postar" class="btn-adm">➕ NOVA POSTAGEM (ADM)</a>{% endif %}
+        {% else %}
+            <div class="profile-card"><a href="/login">Entrar</a> / <a href="/cadastro">Cadastrar</a></div>
         {% endif %}
 
-        <main>
-            {% for post in posts %}
-            <article>
-                <p><strong>{{ post.desc }}</strong></p>
-                {% if post.arquivo %}
-                    <div class="media-container">
-                        {% if post.tipo == 'video' %}
-                            <video controls src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
-                        {% else %}
-                            <img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}">
-                        {% endif %}
-                    </div>
-                {% endif %}
+        {% for post in posts %}
+        <div class="card">
+            <p><strong>{{ post.desc }}</strong></p>
+            {% if post.arquivo %}
+                <div class="media">
+                    {% if post.tipo == 'video' %}<video controls src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
+                    {% else %}<img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}">{% endif %}
+                </div>
+            {% endif %}
 
-                <div class="interacao">
-                    <button onclick="curtir('{{ post.id }}', this)" style="border:none; background:#f0f2f5; border-radius:20px; padding:5px 15px;">
-                        👍 <span>{{ post.likes|length }}</span>
-                    </button>
+            <button onclick="curtir('{{ post.id }}', this)" style="border:none; background:#eee; border-radius:15px; padding:5px 12px; cursor:pointer;">
+                👍 <span>{{ post.likes|length }}</span>
+            </button>
 
-                    <div class="area-comentarios">
-                        {% for c in post.comentarios %}
-                        <div class="comentario-bloco">
-                            <strong>{{ c.autor }}</strong>: {{ c.texto }}
-                            <br>
-                            <button class="btn-responder" onclick="toggleForm('{{ c.id }}')">Responder</button>
-                            
-                            {% if c.respostas %}
-                            <button class="ver-respostas" onclick="toggleRespostas('resp-{{ c.id }}')">Ver respostas ({{ c.respostas|length }})</button>
-                            {% endif %}
+            <div style="margin-top:15px;">
+                {% for c in post.comentarios %}
+                <div style="margin-bottom:10px; border-bottom: 1px solid #f9f9f9;">
+                    <strong>{{ c.autor }}</strong>: {{ c.texto }}<br>
+                    <button class="btn-responder" onclick="toggle('f-{{ c.id }}')">Responder</button>
+                    {% if c.respostas %}<button onclick="toggle('r-{{ c.id }}')" style="background:none; border:none; font-size:0.8em; color:#666;">Ver respostas</button>{% endif %}
+                    
+                    <form id="f-{{ c.id }}" action="/comentar/{{ post.id }}" method="post" class="form-resp">
+                        <input type="hidden" name="parent_id" value="{{ c.id }}">
+                        <input type="text" name="conteudo" placeholder="Responder..." required>
+                        <button type="submit">➤</button>
+                    </form>
 
-                            <form id="form-{{ c.id }}" action="/comentar/{{ post.id }}" method="post" class="form-resposta">
-                                <input type="hidden" name="parent_id" value="{{ c.id }}">
-                                <input type="text" name="conteudo" placeholder="Responda aqui..." required>
-                                <button type="submit" class="envio">➤</button>
-                            </form>
-
-                            <div id="resp-{{ c.id }}" class="resposta-bloco">
-                                {% for r in c.respostas %}
-                                    <p><strong>{{ r.autor }}</strong>: {{ r.texto }}</p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        {% if user %}
-                        <form action="/comentar/{{ post.id }}" method="post" style="margin-top:15px; display:flex; gap:5px;">
-                            <input type="text" name="conteudo" placeholder="Escreva um comentário..." required>
-                            <button type="submit" class="envio">Enviar</button>
-                        </form>
-                        {% endif %}
+                    <div id="r-{{ c.id }}" class="resp-bloco">
+                        {% for r in c.respostas %}<p><strong>{{ r.autor }}</strong>: {{ r.texto }}</p>{% endfor %}
                     </div>
                 </div>
-            </article>
-            {% endfor %}
-        </main>
+                {% endfor %}
+            </div>
+
+            {% if user %}
+            <form action="/comentar/{{ post.id }}" method="post" style="display:flex; gap:5px; margin-top:10px;">
+                <input type="text" name="conteudo" placeholder="Comentar..." required style="flex:1;">
+                <button type="submit">Enviar</button>
+            </form>
+            {% endif %}
+
+            {% if e_admin %}<a href="{{ url_for('deletar', id_post=post.id) }}" class="btn-del" onclick="return confirm('Apagar?')">🗑️ EXCLUIR POSTAGEM</a>{% endif %}
+        </div>
+        {% endfor %}
     </div>
 
     <script>
-        function toggleForm(id) {
-            let f = document.getElementById('form-'+id);
-            f.style.display = (f.style.display === 'block') ? 'none' : 'block';
-        }
-        function toggleRespostas(id) {
-            let r = document.getElementById(id);
-            r.style.display = (r.style.display === 'block') ? 'none' : 'block';
+        function toggle(id) { 
+            let e = document.getElementById(id);
+            e.style.display = (e.style.display === 'block') ? 'none' : 'block';
         }
         function curtir(id, btn) {
             fetch('/curtir/' + id).then(r => r.json()).then(data => {
