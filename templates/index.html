@@ -111,7 +111,7 @@
             .then(r => r.json()).then(data => { if (data.status === "sucesso") { localStorage.setItem('scrollpos', window.scrollY); window.location.reload(true); } else { alert("Erro"); btn.disabled = false; } });
         }
 
-        // Lógica da Assistente de IA com pedido de permissão instantâneo
+        // Lógica da Assistente de IA com pedido de permissão Robusto
         {% if e_admin %}
         const btnMic = document.getElementById('btn-microfone');
         const statusIa = document.getElementById('status-ia');
@@ -134,7 +134,6 @@
         }
 
         const Reconhecimento = window.SpeechRecognition || window.webkitSpeechRecognition;
-        
         if (Reconhecimento) {
             const recognition = new Reconhecimento();
             recognition.lang = 'pt-BR';
@@ -143,15 +142,21 @@
 
             btnMic.onclick = async () => { 
                 try {
-                    // Força o navegador a pedir permissão de microfone se ainda não tiver
-                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Solicita acesso ao microfone via MediaDevices primeiro
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Se o usuário permitiu, paramos o fluxo de áudio para liberar o reconhecimento
+                    stream.getTracks().forEach(track => track.stop());
                     
                     recognition.start(); 
                     statusIa.innerText = "Ouvindo..."; 
                     btnMic.style.background = "#ff4757"; 
                 } catch(err) { 
                     console.error(err);
-                    statusIa.innerText = "Permissão negada ou erro no mic.";
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        statusIa.innerText = "Permissão negada! Ative o microfone no cadeado do navegador.";
+                    } else {
+                        statusIa.innerText = "Erro ao acessar microfone.";
+                    }
                     btnMic.style.background = "#007bff";
                 }
             };
@@ -160,11 +165,12 @@
                 const fala = e.results[0][0].transcript; 
                 respostaIa.innerText = "Você disse: " + fala;
                 falarComIA(fala); 
+                btnMic.style.background = "#007bff"; 
             };
 
             recognition.onerror = (event) => { 
                 btnMic.style.background = "#007bff";
-                statusIa.innerText = "Erro: " + event.error; 
+                statusIa.innerText = "Erro de voz: " + event.error; 
             };
             
             recognition.onend = () => { btnMic.style.background = "#007bff"; };
