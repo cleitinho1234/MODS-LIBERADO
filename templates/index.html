@@ -9,22 +9,32 @@
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
         .main-container { width: 100%; max-width: 650px; padding: 15px; }
         header { background: #24292e; color: white; padding: 20px; text-align: center; width: 100%; margin-bottom: 20px; }
-        .profile-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .input-nome { padding: 15px; border-radius: 8px; border: 2px solid #ccc; width: 100%; max-width: 300px; font-size: 1.1em; margin-bottom: 10px; }
+        
+        /* CARDS E PERFIL */
         .card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .btn-azul { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .profile-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        
+        /* BOTÕES E INPUTS */
+        .btn-azul { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
         .btn-adm { display: block; background: #28a745; color: white; padding: 15px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
-        .btn-sair { color: #d9534f; font-size: 1.1em; display: block; margin-top: 20px; font-weight: bold; text-decoration: none; }
+        .btn-sair { color: #d9534f; font-size: 1.1em; display: block; margin-top: 20px; font-weight: bold; text-decoration: none; border: 2px solid #d9534f; padding: 10px; border-radius: 10px; }
+        .input-nome { padding: 15px; border-radius: 8px; border: 2px solid #ccc; width: 100%; max-width: 300px; font-size: 1.1em; margin-bottom: 10px; }
+
+        /* MICROFONE */
         #btn-microfone { width: 80px; height: 80px; border-radius: 50%; border: none; background: #007bff; color: white; font-size: 30px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .ouvindo { background: #ff4757 !important; transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 71, 87, 0.6) !important; }
+        
+        /* ACESSIBILIDADE LOGIN */
+        .btn-acessivel { display: inline-block; min-width: 150px; padding: 15px; background: #007bff; color: white; text-decoration: none; border-radius: 10px; font-weight: bold; margin: 10px; }
     </style>
 </head>
 <body>
     <header><h1>RB BLOGS</h1></header>
     <div class="main-container">
+        
         {% if user %}
             <div class="profile-card">
-                <p style="font-size: 1.3em;">Seu nome atual: <strong>{{ user_info.nome }}</strong></p>
+                <p style="font-size: 1.3em;">Olá, <strong>{{ user_info.nome }}</strong></p>
                 <form action="/salvar_nome" method="post">
                     <input type="text" name="novo_nome" class="input-nome" placeholder="Novo nome..." required>
                     <br>
@@ -42,6 +52,13 @@
                     <div id="resposta-ia" style="margin-top: 15px; padding: 10px; font-style: italic; color: #333; min-height: 20px;"></div>
                 </div>
             {% endif %}
+
+        {% else %}
+            <div class="profile-card">
+                <p style="font-size: 1.2em; font-weight: bold; margin-bottom: 20px;">Bem-vindo! Acesse sua conta:</p>
+                <a href="/login" class="btn-acessivel">ENTRAR</a>
+                <a href="/cadastro" class="btn-acessivel" style="background: #6c757d;">CADASTRAR</a>
+            </div>
         {% endif %}
 
         {% for post in posts %}
@@ -49,7 +66,7 @@
             <p><strong>{{ post.desc }}</strong></p>
             {% if post.arquivo %}
                 <div style="width:100%; text-align:center;">
-                    {% if post.tipo == 'video' %}<video controls style="width:100%; border-radius:8px;" src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
+                    {% if post.tipo == 'video' %}<video controls playsinline style="width:100%; border-radius:8px;" src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
                     {% else %}<img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}" style="width:100%; border-radius:8px;">{% endif %}
                 </div>
             {% endif %}
@@ -67,23 +84,15 @@
         async function falarComIA(pergunta) {
             statusIa.innerText = "IA processando...";
             try {
-                // Endpoint v1 para maior estabilidade
                 const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-                
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: pergunta }] }]
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: pergunta }] }] })
                 });
 
                 const data = await response.json();
-
-                if (!response.ok) {
-                    console.error("Erro da API:", data);
-                    throw new Error(data.error?.message || "Erro desconhecido");
-                }
+                if (!response.ok) throw new Error(data.error?.message || "Erro na API");
 
                 const textoResposta = data.candidates[0].content.parts[0].text;
                 respostaIa.innerText = textoResposta;
@@ -93,22 +102,26 @@
                 fala.lang = 'pt-BR';
                 window.speechSynthesis.speak(fala);
             } catch (error) {
-                console.error("Erro completo:", error);
-                statusIa.innerText = "Erro na conexão. Verifique sua chave API.";
+                console.error(error);
+                statusIa.innerText = "Erro na conexão com a IA.";
             }
         }
 
         const Reconhecimento = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        if (Reconhecimento) {
+        if (Reconhecimento && btnMic) {
             const recognition = new Reconhecimento();
             recognition.lang = 'pt-BR';
 
-            btnMic.onclick = () => {
+            btnMic.onclick = async () => {
                 if (!gravando) {
                     try {
+                        // Força a permissão de áudio antes de começar
+                        await navigator.mediaDevices.getUserMedia({ audio: true });
                         recognition.start();
-                    } catch (e) { console.error(e); }
+                    } catch (e) { 
+                        statusIa.innerText = "Permissão negada ou erro no mic.";
+                    }
                 } else {
                     recognition.stop();
                 }
@@ -117,7 +130,7 @@
             recognition.onstart = () => {
                 gravando = true;
                 btnMic.classList.add('ouvindo');
-                statusIa.innerText = "Ouvindo... Pode falar!";
+                statusIa.innerText = "Ouvindo...";
             };
 
             recognition.onresult = (e) => {
@@ -126,18 +139,15 @@
                 falarComIA(fala);
             };
 
-            recognition.onerror = (event) => {
+            recognition.onerror = () => {
                 gravando = false;
                 btnMic.classList.remove('ouvindo');
-                statusIa.innerText = "Erro no mic: " + event.error;
             };
 
             recognition.onend = () => {
                 gravando = false;
                 btnMic.classList.remove('ouvindo');
             };
-        } else {
-            statusIa.innerText = "Navegador incompatível.";
         }
     </script>
 </body>
