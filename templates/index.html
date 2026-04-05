@@ -6,86 +6,119 @@
     <title>RB BLOGS</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .main-container { width: 100%; max-width: 700px; padding: 15px; }
-        header { background: #24292e; color: white; padding: 20px; text-align: center; width: 100%; border-radius: 0 0 15px 15px; }
-        .user-bar { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; display: flex; justify-content: space-between; }
-        .btn-postar { display: block; background: #28a745; color: white; padding: 15px; text-align: center; text-decoration: none; font-weight: bold; border-radius: 10px; margin-bottom: 20px; }
-        article { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 12px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .main-container { width: 100%; max-width: 600px; padding: 10px; }
+        header { background: #24292e; color: white; padding: 15px; text-align: center; width: 100%; }
         
-        .media-container { width: 100%; background: #000; border-radius: 8px; overflow: hidden; margin: 10px 0; }
-        video, img { width: 100%; height: auto; display: block; }
+        /* Barra de Perfil */
+        .profile-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .profile-bar form { display: flex; gap: 5px; margin-top: 10px; }
         
-        .btn-like { cursor: pointer; border: none; font-size: 18px; padding: 8px 15px; background: #f0f2f5; border-radius: 20px; color: #4b4f56; font-weight: bold; }
-        .comentarios-lista { margin-top: 15px; padding: 0; list-style: none; }
-        .comentario-item { background: #f0f2f5; padding: 10px; border-radius: 10px; margin-bottom: 5px; }
-        .form-comentario { display: flex; gap: 5px; margin-top: 10px; }
-        .form-comentario input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; }
-        .form-comentario button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 20px; }
-        .btn-excluir { color: #dc3545; text-decoration: none; display: block; text-align: center; margin-top: 15px; font-weight: bold; }
+        article { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 12px; }
+        .media-container img, .media-container video { width: 100%; border-radius: 8px; }
+        
+        /* Comentários e Respostas */
+        .comentario-bloco { margin-top: 15px; border-left: 3px solid #eee; padding-left: 10px; }
+        .resposta-bloco { margin-left: 30px; margin-top: 10px; font-size: 0.9em; border-left: 2px solid #007bff; padding-left: 10px; display: none; }
+        
+        .btn-responder { background: none; border: none; color: #007bff; font-size: 0.8em; cursor: pointer; padding: 0; font-weight: bold; }
+        .ver-respostas { background: none; border: none; color: #65676b; font-size: 0.8em; cursor: pointer; display: block; margin-top: 5px; }
+        
+        .form-resposta { display: none; margin-top: 5px; }
+        input[type="text"] { padding: 8px; border-radius: 15px; border: 1px solid #ddd; width: 80%; }
+        button.envio { border-radius: 15px; border: none; background: #007bff; color: white; padding: 5px 12px; cursor: pointer; }
     </style>
 </head>
 <body>
     <header><h1>RB BLOGS</h1></header>
-    <div class="main-container">
-        <div class="user-bar">
-            {% if user %}
-                <span>Olá, <strong>{{ user.split('@')[0] }}</strong></span>
-                <a href="/logout">Sair</a>
-            {% else %}
-                <a href="/login">Entrar</a> / <a href="/cadastro">Criar Conta</a>
-            {% endif %}
-        </div>
 
-        {% if e_admin %}
-            <a href="/postar" class="btn-postar">➕ NOVA POSTAGEM (FOTO/VÍDEO/TEXTO)</a>
+    <div class="main-container">
+        {% if user %}
+        <div class="profile-bar">
+            <span>Seu nome no blog: <strong>{{ user_info.nome }}</strong></span>
+            <form action="/salvar_nome" method="post">
+                <input type="text" name="novo_nome" placeholder="Trocar meu nome..." required maxlength="20">
+                <button type="submit" class="envio">Salvar</button>
+            </form>
+            <a href="/logout" style="font-size: 0.8em; color: red;">Sair da conta</a>
+        </div>
+        {% else %}
+            <div class="profile-bar" style="text-align: center;">
+                <a href="/login">Entrar</a> ou <a href="/cadastro">Criar Conta</a>
+            </div>
         {% endif %}
 
         <main>
             {% for post in posts %}
             <article>
                 <p><strong>{{ post.desc }}</strong></p>
-                
-                {% if post.tipo == 'video' %}
-                <div class="media-container">
-                    <video controls><source src="{{ url_for('static', filename='uploads/' + post.arquivo) }}" type="video/mp4"></video>
-                </div>
-                {% elif post.tipo == 'foto' %}
-                <div class="media-container">
-                    <img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}" alt="Imagem do post">
-                </div>
+                {% if post.arquivo %}
+                    <div class="media-container">
+                        {% if post.tipo == 'video' %}
+                            <video controls src="{{ url_for('static', filename='uploads/' + post.arquivo) }}"></video>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + post.arquivo) }}">
+                        {% endif %}
+                    </div>
                 {% endif %}
 
                 <div class="interacao">
-                    <button class="btn-like" onclick="curtirVideo('{{ post.id }}', this)">
-                        👍 <span class="contagem">{{ post.likes|length }}</span>
+                    <button onclick="curtir('{{ post.id }}', this)" style="border:none; background:#f0f2f5; border-radius:20px; padding:5px 15px;">
+                        👍 <span>{{ post.likes|length }}</span>
                     </button>
-                    <ul class="comentarios-lista">
+
+                    <div class="area-comentarios">
                         {% for c in post.comentarios %}
-                            <li class="comentario-item"><strong>{{ c.autor.split('@')[0] }}:</strong> {{ c.texto }}</li>
+                        <div class="comentario-bloco">
+                            <strong>{{ c.autor }}</strong>: {{ c.texto }}
+                            <br>
+                            <button class="btn-responder" onclick="toggleForm('{{ c.id }}')">Responder</button>
+                            
+                            {% if c.respostas %}
+                            <button class="ver-respostas" onclick="toggleRespostas('resp-{{ c.id }}')">Ver respostas ({{ c.respostas|length }})</button>
+                            {% endif %}
+
+                            <form id="form-{{ c.id }}" action="/comentar/{{ post.id }}" method="post" class="form-resposta">
+                                <input type="hidden" name="parent_id" value="{{ c.id }}">
+                                <input type="text" name="conteudo" placeholder="Responda aqui..." required>
+                                <button type="submit" class="envio">➤</button>
+                            </form>
+
+                            <div id="resp-{{ c.id }}" class="resposta-bloco">
+                                {% for r in c.respostas %}
+                                    <p><strong>{{ r.autor }}</strong>: {{ r.texto }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
                         {% endfor %}
-                    </ul>
-                    {% if user %}
-                    <form action="{{ url_for('comentar', id_post=post.id) }}" method="post" class="form-comentario">
-                        <input type="text" name="conteudo" placeholder="Comentar..." required>
-                        <button type="submit">Enviar</button>
-                    </form>
-                    {% endif %}
+
+                        {% if user %}
+                        <form action="/comentar/{{ post.id }}" method="post" style="margin-top:15px; display:flex; gap:5px;">
+                            <input type="text" name="conteudo" placeholder="Escreva um comentário..." required>
+                            <button type="submit" class="envio">Enviar</button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </div>
-                {% if e_admin %}
-                    <a href="{{ url_for('deletar', id_post=post.id) }}" class="btn-excluir" onclick="return confirm('Apagar?')">🗑️ EXCLUIR</a>
-                {% endif %}
             </article>
             {% endfor %}
         </main>
     </div>
 
     <script>
-    function curtirVideo(idPost, elemento) {
-        fetch('/curtir/' + idPost)
-        .then(response => response.status === 401 ? window.location.href='/login' : response.json())
-        .then(data => { if(data.novo_total !== undefined) elemento.querySelector('.contagem').innerText = data.novo_total; })
-    }
+        function toggleForm(id) {
+            let f = document.getElementById('form-'+id);
+            f.style.display = (f.style.display === 'block') ? 'none' : 'block';
+        }
+        function toggleRespostas(id) {
+            let r = document.getElementById(id);
+            r.style.display = (r.style.display === 'block') ? 'none' : 'block';
+        }
+        function curtir(id, btn) {
+            fetch('/curtir/' + id).then(r => r.json()).then(data => {
+                if(data.novo_total !== undefined) btn.querySelector('span').innerText = data.novo_total;
+            });
+        }
     </script>
 </body>
 </html>
