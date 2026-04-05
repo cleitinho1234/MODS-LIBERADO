@@ -112,6 +112,49 @@ def postar():
         return redirect(url_for('index'))
     return render_template('postar.html')
 
+@app.route('/comentar/<id_post>', methods=['POST'])
+def comentar(id_post):
+    user_email = session.get('user')
+    if not user_email: return jsonify({"erro": "login"}), 401
+    dados = request.get_json()
+    texto = dados.get('conteudo', '').strip()
+    parent_id = dados.get('parent_id')
+
+    if not texto: return jsonify({"erro": "vazio"}), 400
+
+    novo_coment = {'id': str(uuid.uuid4()), 'autor_email': user_email, 'texto': texto, 'respostas': []}
+    for p in postagens:
+        if p['id'] == id_post:
+            if not parent_id:
+                p['comentarios'].append(novo_coment)
+            else:
+                for c in p['comentarios']:
+                    if c['id'] == parent_id:
+                        c['respostas'].append(novo_coment)
+            salvar_dados(POSTS_FILE, postagens)
+            return jsonify({"status": "sucesso"})
+    return jsonify({"erro": "404"}), 404
+
+@app.route('/curtir/<id_post>')
+def curtir(id_post):
+    user = session.get('user')
+    if not user: return jsonify({"erro": "login"}), 401
+    for p in postagens:
+        if p['id'] == id_post:
+            if user not in p['likes']: p['likes'].append(user)
+            else: p['likes'].remove(user)
+            salvar_dados(POSTS_FILE, postagens)
+            return jsonify({"novo_total": len(p['likes'])})
+    return jsonify({"erro": "404"}), 404
+
+@app.route('/deletar/<id_post>')
+def deletar(id_post):
+    if session.get('user') not in ADMINS: return "Negado", 403
+    global postagens
+    postagens = [p for p in postagens if p['id'] != id_post]
+    salvar_dados(POSTS_FILE, postagens)
+    return redirect(url_for('index'))
+
 @app.route('/logout')
 def logout():
     session.clear()
