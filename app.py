@@ -7,7 +7,7 @@ import uuid
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_do_cleitinho'
 
-# Configuração para aceitar vídeos grandes (100MB)
+# Configuração para aceitar vídeos grandes
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 
 
 UPLOAD_FOLDER = 'static/uploads'
@@ -52,9 +52,6 @@ def salvar_nome():
     user_email = session.get('user')
     novo_nome = request.form.get('novo_nome', '').strip()
     if not user_email or not novo_nome: return redirect(url_for('index'))
-    for email, info in usuarios.items():
-        if info.get('nome') == novo_nome and email != user_email:
-            return "Nome já existe! <a href='/'>Voltar</a>"
     usuarios[user_email]['nome'] = novo_nome
     return redirect(url_for('index'))
 
@@ -94,8 +91,6 @@ def comentar(id_post):
     parent_id = dados.get('parent_id')
     nome_usuario = usuarios[user_email]['nome']
     
-    if not texto: return jsonify({"erro": "vazio"}), 400
-
     novo_coment = {'id': str(uuid.uuid4()), 'autor': nome_usuario, 'texto': texto, 'respostas': []}
     for p in postagens:
         if p['id'] == id_post:
