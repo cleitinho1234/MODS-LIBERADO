@@ -6,26 +6,19 @@
     <title>Painel - ELITE MODS HUB</title>
     <style>
         body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 30px; }
-        h1 { color: #25d366; font-size: 1.5em; margin: 0; }
+        .container { max-width: 900px; margin: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        h1 { color: #25d366; margin: 0; font-size: 1.5em; }
+        .btn-logout { background: #ff4444; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
         
-        .btn-logout { background: #ff4444; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85em; }
-        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #25d366; padding: 12px; border-bottom: 1px solid #333; }
+        td { padding: 15px 12px; border-bottom: 1px solid #222; }
         
-        /* Estilo para a Lista de Admin */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; color: #25d366; border-bottom: 1px solid #333; padding: 12px; }
-        td { padding: 15px 12px; border-bottom: 1px solid #222; font-size: 0.9em; }
-        .btn-liberar { background: #25d366; color: black; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
-        .btn-remover { background: #444; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; margin-left: 5px; }
-
-        /* Estilo para a Área de Downloads do Usuário */
-        .mod-item { background: #252525; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border: 1px solid #333; }
-        .mod-info h3 { margin: 0; color: #25d366; font-size: 1.1em; }
-        .mod-info p { margin: 5px 0 0; font-size: 0.85em; color: #aaa; }
-        .btn-download { background: #25d366; color: black; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
-        .btn-download:hover { transform: scale(1.05); background: #1eb956; }
+        .status-badge { padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 0.8em; }
+        .btn-liberar { background: #25d366; color: black; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+        .btn-remover { background: #444; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -38,14 +31,14 @@
 
     {% if e_admin %}
     <div class="card">
-        <h2 style="margin-top:0;">Gerenciar Clientes</h2>
+        <h2>Gerenciar Clientes</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Usuário</th>
+                    <th>Email</th>
                     <th>Senha</th>
                     <th>Status</th>
-                    <th>Ação</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,11 +49,11 @@
                     <td><code>{{ dados.senha_limpa }}</code></td>
                     <td>
                         {% if dados.acesso %}
-                            <b style="color: #25d366;">ATIVO</b>
+                            <span class="status-badge" style="background: rgba(37,211,102,0.2); color: #25d366;">🔓 LIBERADO</span>
                         {% elif dados.pediu_liberacao %}
-                            <b style="color: #f1c40f;">PAGOU (⏳)</b>
+                            <span class="status-badge" style="background: rgba(241,196,15,0.2); color: #f1c40f;">⏳ PAGOU</span>
                         {% else %}
-                            <span style="color: #666;">LOGADO</span>
+                            <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #888;">💤 OFF</span>
                         {% endif %}
                     </td>
                     <td>
@@ -73,27 +66,12 @@
             </tbody>
         </table>
     </div>
-
     {% else %}
-    <div class="card">
-        <h2 style="color: #25d366; margin-top: 0;">Sua Área de Membros</h2>
-        <p>Acesso vitalício liberado. Aproveite os seus mods abaixo:</p>
-        
-        <div class="mod-item">
-            <div class="mod-info">
-                <h3>Pack de Mods V1</h3>
-                <p>Otimização completa e recursos novos.</p>
-            </div>
-            <a href="COLOQUE_AQUI_O_LINK_DO_MEDIAFIRE" class="btn-download">BAIXAR</a>
-        </div>
-
-        <div class="mod-item">
-            <div class="mod-info">
-                <h3>Script Anti-Lag</h3>
-                <p>Melhore o desempenho do seu sistema.</p>
-            </div>
-            <a href="COLOQUE_AQUI_O_LINK_DO_MEDIAFIRE" class="btn-download">BAIXAR</a>
-        </div>
+    <div class="card" style="text-align: center;">
+        <h2 style="color: #25d366;">Acesso Premium Liberado!</h2>
+        <p>Abaixo estão os seus links de download:</p>
+        <br>
+        <a href="LINK_DO_MOD" class="btn-liberar" style="padding: 20px 40px; font-size: 1.2em;">BAIXAR PACK DE MODS AGORA</a>
     </div>
     {% endif %}
 </div>
