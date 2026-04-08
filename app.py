@@ -6,9 +6,9 @@ from datetime import timedelta
 
 app = Flask(__name__)
 
-# CHAVE FIXA: Isso impede que os usuários sejam deslogados quando o site reinicia
-app.secret_key = 'uma_chave_muito_segura_e_permanente_123'
-app.permanent_session_lifetime = timedelta(days=30) # Login dura 30 dias
+# Chave de segurança para manter as sessões ativas
+app.secret_key = 'chave_mestre_elite_mods_hub_2026'
+app.permanent_session_lifetime = timedelta(days=30)
 
 USERS_FILE = 'usuarios.json'
 ADMIN_EMAIL = 'cleitinhodacruzsilva4@gmail.com'
@@ -34,16 +34,15 @@ def index():
     if not user_email:
         return redirect(url_for('login'))
     
-    session.permanent = True # Ativa a duração de 30 dias
+    session.permanent = True
     user_info = usuarios.get(user_email)
     e_admin = (user_email == ADMIN_EMAIL)
     
-    # Se o usuário não existir mais no banco (deletado), desloga ele
     if not user_info:
         session.clear()
         return redirect(url_for('login'))
 
-    # Se não for admin e não tiver acesso, manda para pagamento
+    # Se NÃO for admin e NÃO tiver acesso, manda pra tela de pagamento
     if not e_admin and not user_info.get('acesso'):
         return render_template('pagamento.html')
     
@@ -64,7 +63,7 @@ def pedir_ativacao():
 
 @app.route('/liberar/<email>')
 def liberar_acesso(email):
-    if session.get('user') != ADMIN_EMAIL: return "Proibido", 403
+    if session.get('user') != ADMIN_EMAIL: return "Acesso Negado", 403
     usuarios = carregar_usuarios()
     if email in usuarios:
         usuarios[email]['acesso'] = True
@@ -72,12 +71,22 @@ def liberar_acesso(email):
         salvar_usuarios(usuarios)
     return redirect(url_for('index'))
 
-@app.route('/remover/<email>')
-def remover_usuario(email):
-    if session.get('user') != ADMIN_EMAIL: return "Proibido", 403
+@app.route('/bloquear/<email>')
+def bloquear_acesso(email):
+    if session.get('user') != ADMIN_EMAIL: return "Acesso Negado", 403
     usuarios = carregar_usuarios()
     if email in usuarios:
-        del usuarios[email] # Remove de vez para não encher a lista
+        usuarios[email]['acesso'] = False
+        usuarios[email]['pediu_liberacao'] = False
+        salvar_usuarios(usuarios)
+    return redirect(url_for('index'))
+
+@app.route('/remover/<email>')
+def remover_usuario(email):
+    if session.get('user') != ADMIN_EMAIL: return "Acesso Negado", 403
+    usuarios = carregar_usuarios()
+    if email in usuarios:
+        del usuarios[email]
         salvar_usuarios(usuarios)
     return redirect(url_for('index'))
 
