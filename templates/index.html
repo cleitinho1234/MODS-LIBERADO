@@ -6,19 +6,24 @@
     <title>Painel - ELITE MODS HUB</title>
     <style>
         body { font-family: sans-serif; background: #0f0f0f; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        h1 { color: #25d366; margin: 0; font-size: 1.5em; }
+        .container { max-width: 950px; margin: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 30px; }
+        h1 { color: #25d366; margin: 0; }
         .btn-logout { background: #ff4444; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; }
-        
         .card { background: #1a1a1a; padding: 25px; border-radius: 15px; border: 1px solid #333; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: #25d366; padding: 12px; border-bottom: 1px solid #333; }
-        td { padding: 15px 12px; border-bottom: 1px solid #222; }
         
-        .status-badge { padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 0.8em; }
-        .btn-liberar { background: #25d366; color: black; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; }
-        .btn-remover { background: #444; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; margin-left: 5px; }
+        /* Tabela Admin */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #25d366; padding: 12px; border-bottom: 2px solid #333; }
+        td { padding: 15px 12px; border-bottom: 1px solid #222; font-size: 0.9em; }
+        
+        .btn-liberar { background: #25d366; color: black; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+        .btn-bloquear { background: #f1c40f; color: black; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+        .btn-remover { background: #444; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; margin-left: 5px; }
+
+        /* Estilo Downloads */
+        .mod-box { background: #222; border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-down { background: #25d366; color: black; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -31,7 +36,7 @@
 
     {% if e_admin %}
     <div class="card">
-        <h2>Gerenciar Clientes</h2>
+        <h2>Controle de Clientes</h2>
         <table>
             <thead>
                 <tr>
@@ -49,15 +54,19 @@
                     <td><code>{{ dados.senha_limpa }}</code></td>
                     <td>
                         {% if dados.acesso %}
-                            <span class="status-badge" style="background: rgba(37,211,102,0.2); color: #25d366;">🔓 LIBERADO</span>
+                            <b style="color: #25d366;">[✓] ATIVO</b>
                         {% elif dados.pediu_liberacao %}
-                            <span class="status-badge" style="background: rgba(241,196,15,0.2); color: #f1c40f;">⏳ PAGOU</span>
+                            <b style="color: #f1c40f;">[$] AGUARDANDO</b>
                         {% else %}
-                            <span class="status-badge" style="background: rgba(255,255,255,0.1); color: #888;">💤 OFF</span>
+                            <span style="color: #666;">[!] PENDENTE</span>
                         {% endif %}
                     </td>
                     <td>
-                        <a href="/liberar/{{ email }}" class="btn-liberar">LIBERAR</a>
+                        {% if not dados.acesso %}
+                            <a href="/liberar/{{ email }}" class="btn-liberar">LIBERAR</a>
+                        {% else %}
+                            <a href="/bloquear/{{ email }}" class="btn-bloquear">BLOQUEAR</a>
+                        {% endif %}
                         <a href="/remover/{{ email }}" class="btn-remover">X</a>
                     </td>
                 </tr>
@@ -67,11 +76,15 @@
         </table>
     </div>
     {% else %}
-    <div class="card" style="text-align: center;">
-        <h2 style="color: #25d366;">Acesso Premium Liberado!</h2>
-        <p>Abaixo estão os seus links de download:</p>
-        <br>
-        <a href="LINK_DO_MOD" class="btn-liberar" style="padding: 20px 40px; font-size: 1.2em;">BAIXAR PACK DE MODS AGORA</a>
+    <div class="card">
+        <h2 style="color: #25d366;">Seus Downloads Liberados</h2>
+        <div class="mod-box">
+            <div>
+                <h3 style="margin:0;">Pack Principal V1</h3>
+                <small style="color:#888;">Última atualização: Hoje</small>
+            </div>
+            <a href="LINK_AQUI" class="btn-down">DOWNLOAD</a>
+        </div>
     </div>
     {% endif %}
 </div>
